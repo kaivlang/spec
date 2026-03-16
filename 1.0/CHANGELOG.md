@@ -13,3 +13,8 @@ Kv Format 1.0 Specification CHANGELOG
 
 - Added rationale why this versioning scheme may be desired
   even with languages supporting feature gates (e.g., Rust)
+
+- Added footnote with rationale on EOLs on final line
+
+- Added an edge case clarifying error to raise in case a key consists
+  of whitespace characters only

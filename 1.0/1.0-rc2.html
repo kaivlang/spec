@@ -670,7 +670,7 @@ where:
 Every line in a Kv text
 MUST be terminated with an EOL
 (either LF or CRLF),
-including the final line.
+including the final line.<sup><a href="#fn3" id="fnref3">3</a></sup>
 An EOL is considered part of the line
 (see <a href="#sec-term-eol">Section 2.6</a>).
 </p>
@@ -1272,7 +1272,7 @@ EMPTY=
 <p>
 Leading and trailing space
 in values preserved
-(values are: «<code>foo·</code>» and «<code>·bar</code>»)<sup><a href="#fn3" id="fnref3">3</a></sup>
+(values are: «<code>foo·</code>» and «<code>·bar</code>»)<sup><a href="#fn4" id="fnref4">4</a></sup>
 </p>
 <pre class="kv">
 trailing=foo·
@@ -1512,6 +1512,20 @@ Error — space is not a valid key character
 foo bar=value
 </pre>
 </li>
+
+<li>
+<p>
+Error: whitespace as key is
+an <code>EMPTY_KEY_ERROR</code>,
+not an <code>INVALID_KEY_ERROR</code>
+(leading whitespace may be trimmed
+before parsing the line)
+</p>
+<pre class="kv">
+·=value
+</pre>
+</li>
+
 </ol>
 </section>
 
@@ -2189,8 +2203,20 @@ E. return (error_count &gt; 0 ? 1 : 0)
     <a href="#fnref2" title="Return to text">↩</a>
 </li>
 <li id="fn3">
-    Dots represent space characters.
+    The strict requirement
+    on the final line including an EOL
+    enables deterministic streaming parsing,
+    where EOL serves as the definitive marker
+    that a complete line has been received.
+    Without a final EOL,
+    streaming implementations cannot reliably
+    distinguish incomplete transmissions
+    from valid end-of-input.
     <a href="#fnref3" title="Return to text">↩</a>
+</li>
+<li id="fn4">
+    Dots represent space characters.
+    <a href="#fnref4" title="Return to text">↩</a>
 </li>
 </ol>
 </footer>
