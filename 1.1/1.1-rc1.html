@@ -1,0 +1,3182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kv Format 1.1 Specification RC1</title>
+<link rel="stylesheet" href="spec.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="document-header">
+    <h1 class="document-title">Kv Format 1.1 Specification</h1>
+    <div class="document-meta">
+        <address class="document-author">
+            <a href="https://kvformat.org/">kvformat.org</a>
+        </address>
+        <dl class="document-status">
+            <dt>Version</dt>
+            <dd>1.1 RC1</dd>
+            <dt>Published</dt>
+            <dd><time datetime="2026-03-19">2026-03-19</time></dd>
+            <dt>Status</dt>
+            <dd>Under Review</dd>
+            <dt>Planned Stable</dt>
+            <dd>2026-06-15</dd>
+            <dt>Editor</dt>
+            <dd>Bojan Đuričković</dd>
+            <dt>Email</dt>
+            <dd><a href="mailto:v1.1-rc1@kvformat.org">v1.1-rc1@kvformat.org</a></dd>
+        </dl>
+    </div>
+</header>
+
+<nav id="toc">
+    <h2>Table of Contents</h2>
+    <p><a href="#sec-introduction">Introduction</a></p>
+    <p><strong>Part I — .env Standard (v1.0)</strong></p>
+    <ol>
+        <li><a href="#sec-intro">Introduction</a>
+            <ul>
+                <li><a href="#sec-scope">1.1 Scope</a></li>
+                <li><a href="#sec-specification-structure">1.2 Specification Structure</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-terminology">Terminology</a>
+            <ul>
+                <li><a href="#sec-term-containers">2.1 Containers</a></li>
+                <li><a href="#sec-term-atomic">2.2 Atomic Building Blocks</a></li>
+                <li><a href="#sec-term-text-elements">2.3 Text Elements</a></li>
+                <li><a href="#sec-term-entries">2.4 Entries</a></li>
+                <li><a href="#sec-term-whitespace">2.5 Whitespace</a></li>
+                <li><a href="#sec-term-eol">2.6 Line and EOL</a></li>
+                <li><a href="#sec-term-parser">2.7 Parser</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-syntax">Syntax</a>
+            <ul>
+                <li><a href="#sec-syntax-data-line">3.1 Data Line</a></li>
+                <li><a href="#sec-syntax-comment-line">3.2 Comment Line</a></li>
+                <li><a href="#sec-syntax-blank-line">3.3 Blank Line</a></li>
+                <li><a href="#sec-syntax-eol">3.4 EOL</a></li>
+                <li><a href="#sec-syntax-shebang-line">3.5 Shebang Line (File-Level)</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-parsing">Parsing</a>
+            <ul>
+                <li><a href="#sec-line-numbers">4.1 Line Numbers</a></li>
+                <li><a href="#sec-entry-structure">4.2 Entry Structure</a></li>
+                <li><a href="#sec-entry-stream">4.3 Entry Stream</a></li>
+                <li><a href="#sec-parsing-requirements">4.4 General Parsing Requirements</a></li>
+                <li><a href="#sec-whitespace-handling">4.5 Whitespace Handling</a></li>
+                <li><a href="#sec-value-preservation">4.6 Value Preservation</a></li>
+                <li><a href="#sec-utf8-processing">4.7 UTF-8 Processing</a></li>
+                <li><a href="#sec-parser-error-handling">4.8 Error Handling</a></li>
+                <li><a href="#sec-parser-limits">4.9 Implementation Limits</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-semantics">Semantics</a>
+            <ul>
+                <li><a href="#sec-semantics-values-are-verbatim">5.1 Values are Verbatim Literals</a></li>
+                <li><a href="#sec-duplicate-keys">5.2 Duplicate Key Semantics</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-files">File Representation</a>
+            <ul>
+                <li><a href="#sec-files-extension">6.1 File Extension</a></li>
+                <li><a href="#sec-files-mime-type">6.2 Media Type (MIME Type)</a>
+                    <ul>
+                        <li><a href="#sec-files-mime-type-choosing">6.2.1 Choosing Between <code>application/kv</code> and <code>text/kv</code></a></li>
+                        <li><a href="#sec-files-mime-type-transport">6.2.2 Transport Considerations for <code>text/kv</code></a></li>
+                        <li><a href="#sec-files-mime-type-parameters">6.2.3 Parameters</a></li>
+                        <li><a href="#sec-files-mime-type-examples">6.2.4 Examples</a></li>
+                        <li><a href="#sec-files-mime-type-future">6.2.5 Future Registration</a></li>
+                    </ul>
+                </li>
+                <li><a href="#sec-files-encoding">6.3 File Encoding</a></li>
+                <li><a href="#sec-files-shebang">6.4 Shebang Lines</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-examples">Examples</a>
+            <ul>
+                <li><a href="#sec-examples-valid">7.1 Valid Examples</a></li>
+                <li><a href="#sec-examples-invalid">7.2 Invalid Examples</a></li>
+                <li><a href="#sec-examples-edge-cases">7.3 Edge Cases</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-versioning">Versioning</a>
+            <ul>
+                <li><a href="#sec-versioning-layered">8.1 Layered Feature Progression</a></li>
+                <li><a href="#sec-versioning-implementation">8.2 Implementation Versioning</a></li>
+            </ul>
+        </li>
+    </ol>
+    <p><strong>Part II — Kv Core (v1.1)</strong></p>
+    <ol start="9">
+        <li><a href="#sec-format-declaration">Format Declaration</a>
+            <ul>
+                <li><a href="#sec-version-declaration-syntax">9.1 Version Declaration Syntax</a></li>
+                <li><a href="#sec-version-declaration-errors">9.2 Version Declaration Errors</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-kv-variants">Kv Variants</a>
+            <ul>
+                <li><a href="#sec-unicode-keys">10.1 Unicode Keys</a></li>
+                <li><a href="#sec-unicode-keys-examples">10.2 Examples</a></li>
+                <li><a href="#sec-version-identifiers">10.3 Version Identifiers</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-schemas">Schemas</a>
+            <ul>
+                <li><a href="#sec-schema-declaration">11.1 Schema declaration</a></li>
+                <li><a href="#sec-schema-definition">11.2 Schema Definition</a></li>
+                <li><a href="#sec-schema-required-keys">11.3 Required Keys</a></li>
+                <li><a href="#sec-schema-relaxed">11.4 Relaxed Schemas</a></li>
+                <li><a href="#sec-schema-strict">11.5 Strict Schemas</a></li>
+                <li><a href="#sec-schema-format-declaration-syntax">11.6 General Format Declaration Syntax</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-metadata-entries">Metadata Entries</a></li>
+        <li><a href="#sec-type-annotations">Type Annotations</a>
+            <ul>
+                <li><a href="#sec-type-annotations-syntax">13.1 Syntax</a></li>
+                <li><a href="#sec-type-annotations-semantics">13.2 Semantics</a></li>
+                <li><a href="#sec-type-annotations-standard">13.3 Standard Type Annotations</a></li>
+                <li><a href="#sec-type-annotations-custom">13.4 Custom Type Annotations</a></li>
+                <li><a href="#sec-type-annotations-parsing">13.5 Parsing Requirements</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-b64">Encoding Directive</a>
+            <ul>
+                <li><a href="#sec-b64-syntax">14.1 Syntax</a></li>
+                <li><a href="#sec-b64-variant">14.2 Base64url Variant</a></li>
+                <li><a href="#sec-b64-examples">14.3 Examples</a></li>
+                <li><a href="#sec-b64-parsing">14.4 Parsing Requirements</a></li>
+            </ul>
+        </li>
+        <li><a href="#sec-kv-comment-syntax">Kv Comment Syntax</a></li>
+        <li><a href="#sec-metadata-forward-compat">Metadata Forward Compatibility</a></li>
+        <li><a href="#sec-references">References</a></li>
+    </ol>
+    <p><strong>Appendices</strong></p>
+    <ol style="list-style-type: upper-alpha;">
+        <li><a href="#apx-grammar">Formal Grammar</a>
+            <ol>
+                <li><a href="#apx-grammar-standard">A.1 Standard Variant Grammar</a></li>
+                <li><a href="#apx-grammar-unicode">A.2 Unicode Variant Grammar</a></li>
+                <li><a href="#apx-grammar-notes">A.3 Notes</a></li>
+                <li><a href="#apx-grammar-schema">A.4 Schema Definition</a></li>
+            </ol>
+        </li>
+        <li><a href="#apx-errors">Error Conditions</a>
+            <ol>
+                <li><a href="#bom_error">B.1 <code>BOM_ERROR</code></a></li>
+                <li><a href="#invalid_utf8_error">B.2 <code>INVALID_UTF8_ERROR</code></a></li>
+                <li><a href="#invalid_version_error">B.3 <code>INVALID_VERSION_ERROR</code></a></li>
+                <li><a href="#unsupported_version_error">B.4 <code>UNSUPPORTED_VERSION_ERROR</code></a></li>
+                <li><a href="#invalid_character_error">B.5 <code>INVALID_CHARACTER_ERROR</code></a></li>
+                <li><a href="#empty_key_error">B.6 <code>EMPTY_KEY_ERROR</code></a></li>
+                <li><a href="#missing_operator_error">B.7 <code>MISSING_OPERATOR_ERROR</code></a></li>
+                <li><a href="#invalid_key_error">B.8 <code>INVALID_KEY_ERROR</code></a></li>
+                <li><a href="#invalid_directive_error">B.9 <code>INVALID_DIRECTIVE_ERROR</code></a></li>
+                <li><a href="#missing_final_eol_error">B.10 <code>MISSING_FINAL_EOL_ERROR</code></a></li>
+            </ol>
+        </li>
+    </ol>
+    <p><a href="#sec-license">License</a></p>
+    <ol>
+        <li><a href="#sec-license-summary">Summary</a></li>
+        <li><a href="#sec-license-attribution">Attribution Practice</a></li>
+        <li><a href="#sec-license-disclaimer">Disclaimer</a></li>
+        <li><a href="#sec-license-scope">Scope</a></li>
+    </ol>
+</nav>
+
+<section id="sec-introduction">
+<h2>Introduction</h2>
+<p>
+Kv Format 1.1 extends the 1.0 specification in several ways,
+introducing:
+</p>
+<ol>
+<li>
+    the <em>version declaration</em> syntax <code>!kv 1.1</code>,
+</li>
+<li>
+    a <em>Unicode Kv Format variant</em> that allows UTF-8 keys,
+    while still retaining the alphanumeric+underscore restriction,
+</li>
+<li>
+    <em>type annotations</em> (e.g., <code>!int</code>, <code>!bool</code>),
+</li>
+<li>
+    the <em>base64 encoding directive</em> <code>!b64</code>,
+    addressing the single-line value limitation of the .env standard.
+</li>
+</ol>
+</section>
+
+<h2 class="part-title">Part I — .env Standard (v1.0)</h2>
+
+<section id="sec-intro">
+
+<h2>1 Introduction</h2>
+
+<p>
+Kv (pronounced: <q>cave</q>) Format's driving idea
+is radical simplicity—
+to use a <em>regular grammar</em>
+(simpler than the context-free grammars of JSON and TOML).
+It builds upon .env file conventions
+while imposing constraints
+necessary for regular language properties.
+Kv Format 1.0 is thus a standardized
+minimal common denominator
+to .env files used in practice,
+intended to provide a foundation
+for extensions in 1.<i>x</i> versions.
+</p>
+
+<p>
+The goal of Kv Format is to provide:
+</p>
+
+<ol>
+<li>
+    <em>a regular grammar</em>,
+    parsable with deterministic finite automata
+    where each character
+    is examined exactly once,
+    with:
+    <ul>
+        <li>
+            <em>a minimal syntax</em>
+            with no escape mechanisms,
+            no multiline values,
+            and no interpolation,
+        </li>
+        <li>
+            <em>a compact syntax</em>
+            with no structural whitespace,
+            and no significant quotes or brackets,
+        </li>
+    </ul>
+</li>
+
+<li>
+    <em>a streaming-first design</em>,
+    with entry stream
+    enabling CSP/channel-based processing,
+</li>
+
+<li>
+    <em>application flexibility</em>,
+    supporting different duplicate key handling strategies,
+    and optional comment preservation.
+</li>
+</ol>
+
+<p>
+This design trades expressiveness
+(escaping, nesting, interpolation, multiline values)
+in exchange for single-pass parsing,
+deterministic processing,
+and straightforward implementation.
+</p>
+
+<p>
+To avoid confusion
+with incompatible <code>.env</code> dialects,
+Kv Format files should use the <code>.kv</code> extension.
+</p>
+
+<section id="sec-scope">
+<h3>1.1 Scope</h3>
+
+<p>
+This specification defines:
+</p>
+
+<ul>
+    <li>Kv text syntax,</li>
+    <li>parsing requirements,
+        including error conditions,</li>
+    <li>the <em>entry stream</em> —
+        the sequence of parsed entries
+        that parsers emit
+        (conceptual definition only).</li>
+</ul>
+
+<p>
+This specification does <em>not</em> define:
+</p>
+
+<ul>
+    <li>parser APIs —
+        implementations may use
+        channels, iterators, callbacks,
+        or other patterns;</li>
+    <li>entry processing —
+        applications may consume entries
+        in any suitable way;</li>
+    <li>data structures —
+        internal representation of parsed
+        or processed data.</li>
+</ul>
+
+<p>
+In Kv Format terminology,
+the <em>parser</em> processes Kv text
+to emit <em>entries</em>.
+The parser's responsibility ends
+with entry emission;
+application logic that consumes entries
+is outside this specification's scope.
+Thus, a parser in Kv Format terminology
+has a narrower meaning than typical:
+it is a token producer
+that yields entries
+for subsequent processing,
+without constructing
+concrete or abstract syntax trees.<sup><a href="#fn1" id="fnref1">1</a></sup>
+</p>
+
+<p>
+The <em>entry stream</em> abstraction
+separates parsing (syntax recognition)
+from processing (semantic interpretation).
+This enables flexible integration
+into different application architectures
+while maintaining a clear boundary
+between the parser's responsibilities
+and the application's domain logic.
+</p>
+
+</section>
+
+<section id="sec-specification-structure">
+<h3>1.2 Specification Structure</h3>
+
+<p>
+This specification is structured
+for stable evolution
+across 1.<i>x</i> versions:
+</p>
+
+<ul>
+<li>
+    <strong>Sections — <em>Normative Requirements</em>:</strong>
+    define the stable syntax, parsing model,
+    and requirements of Kv Format.
+    The intention is to preserve
+    Sections unchanged
+    in Kv Format 1.<i>x</i> versions,
+    with new sections appended as needed.
+</li>
+<li>
+    <strong>Appendices — <em>Technicalia</em>:</strong>
+    contain formal definitions,
+    algorithms, and implementation details
+    that may be refined in minor versions
+    while maintaining compatibility
+    with the Normative Requirements.
+</li>
+</ul>
+
+<p>
+The Technicalia
+provide the authoritative interpretation
+of the Normative Requirements.
+Implementations that conform to the Technicalia
+necessarily satisfy the Normative Requirements,
+and in case of ambiguity,
+the Technicalia has precedence.
+</p>
+</section>
+
+</section>
+
+<section id="sec-terminology">
+
+<h2>2 Terminology</h2>
+
+<p>
+The all-caps key words
+"MUST", "MUST NOT", "REQUIRED",
+"SHALL", "SHALL NOT",
+"SHOULD", "SHOULD NOT",
+"RECOMMENDED", "MAY", and "OPTIONAL"
+in this document
+are to be interpreted as described
+in RFC 2119 [<a href="#ref-rfc2119">rfc2119</a>].
+</p>
+
+<p>
+Unicode code points in the <code>U+XXXX</code> form
+are defined in the Unicode Standard [<a href="#ref-unicode">unicode</a>].
+</p>
+
+<section id="sec-term-containers">
+<h3>2.1 Containers</h3>
+
+<ul>
+    <li>
+        <strong>Kv text</strong>:
+        a Unicode string encoded in UTF-8
+        that conforms to the Kv Format grammar
+    </li>
+    <li>
+        <strong>Kv file</strong>:
+        a Kv text stored in a file system,
+        optionally preceded by a shebang line
+    </li>
+</ul>
+</section>
+
+<section id="sec-term-atomic">
+<h3>2.2 Atomic Building Blocks</h3>
+
+<ul>
+    <li>
+        <strong>key</strong>:
+        a string identifier, a variable name
+    </li>
+    <li>
+        <strong>value</strong>:
+        a single-line string
+    </li>
+</ul>
+</section>
+
+<section id="sec-term-text-elements">
+<h3>2.3 Text Elements</h3>
+
+<p>
+A Kv text is composed
+of different types of lines:
+</p>
+
+<ul>
+    <li>
+        <strong>data line</strong>:
+        a line defining a key-value data entry,
+        consisting of:
+        <ul>
+            <li>a <em>key</em>,</li>
+            <li>the <strong>assignment operator</strong>,</li>
+            <li>a <em>value</em>;</li>
+        </ul>
+    </li>
+    <li>
+        <strong>comment line</strong>:
+        a line defining a comment entry,
+        starting with <code>#</code>
+        and extending to the end of the line;
+    </li>
+    <li>
+        <strong>blank line</strong>: an empty line.
+    </li>
+</ul>
+
+<p>
+<em>Data lines</em> and <em>comment lines</em>
+are collectively termed <strong>content lines</strong>.
+</p>
+</section>
+
+<section id="sec-term-entries">
+<h3>2.4 Entries</h3>
+
+<p>
+The parser emits an output
+of parsed <strong>entries</strong>,
+which come in several varieties:
+</p>
+
+<ul>
+    <li>
+        <strong>KV entry</strong>:<sup><a href="#fn2" id="fnref2">2</a></sup>
+        a key-value pair of strings
+        that contributes to the document's data
+        (always emitted),
+    </li>
+    <li>
+        <strong>comment entry</strong>:
+        string annotation
+        that does not contribute
+        to the document's data
+        but may be preserved by the parser
+        for round-trip serialization
+        (optional),
+    </li>
+    <li>
+        <strong>blank entry</strong>:
+        result of parsing a blank line
+        (optional),
+    </li>
+    <li>
+        <strong>shebang entry</strong>:
+        a representation of a shebang line
+        (optional).
+    </li>
+</ul>
+
+</section>
+
+<section id="sec-term-whitespace">
+<h3>2.5 Whitespace</h3>
+
+<p>
+In this specification,
+<strong>whitespace</strong> refers exclusively to:</p>
+
+<ul>
+    <li><code>U+0020</code> <code>SPACE</code></li>
+    <li><code>U+0009</code> <code>CHARACTER TABULATION</code></li>
+</ul>
+
+<p>
+In Kv Format syntax,
+whitespace characters are generally treated
+like any other characters,
+except that they are tolerated as indentation
+and as optional spacing
+between keys and assignment operators.</p>
+</section>
+
+<section id="sec-term-eol">
+<h3>2.6 Line and EOL</h3>
+
+<p>
+<strong>EOL</strong> (End of Line)
+is a line terminator,
+either LF (POSIX-style line feed)
+or CRLF (Windows-style line ending).
+Kv Format tolerates intermixing of LF and CRLF
+within the same Kv text.
+</p>
+
+<p>
+In this specification,
+a <strong>line</strong>
+refers to the sequence of characters
+from the start of the line
+up to and <em>including</em> the line terminator (EOL).
+</p>
+
+</section>
+
+<section id="sec-term-parser">
+<h3>2.7 Parser</h3>
+
+<p>
+A <strong>parser</strong> is a process
+that reads Kv text
+and emits an <strong>entry stream</strong>
+according to this specification.
+</p>
+</section>
+
+</section>
+
+<section id="sec-syntax">
+
+<h2>3 Syntax</h2>
+
+<p>
+This section represents a descriptive definition
+of the Kv Format syntax.
+The formal grammar presented
+in <a href="#apx-grammar">Appendix A</a>
+is the normative definition,
+and has precedence in case of any ambiguity.</p>
+
+<section id="sec-syntax-data-line">
+<h3>3.1 Data Line</h3>
+
+<p>A key-value data line has the basic form (BNF):</p>
+<pre class="abnf">
+key OP value EOL
+</pre>
+
+<p>where:</p>
+
+<ul>
+<li>
+    <code class="abnf">key</code> is a string identifier,
+</li>
+<li>
+    <code class="abnf">OP</code> is an assignment operator;
+    for simple string values this is
+    <code class="abnf">%x3D ; EQUALS SIGN</code> (<code>=</code>),
+</li>
+<li>
+    <code class="abnf">value</code> is the remainder of the line,
+    extending from the assignment operator
+    to the end of the line,
+    excluding the EOL,
+</li>
+<li>
+    <code class="abnf">EOL</code> is the line terminator
+    (LF or CRLF).
+</li>
+</ul>
+
+<p>
+For example:
+</p>
+<pre class="kv">
+host=kvformat.org
+</pre>
+
+<p>
+Keys and assignment operators
+may be indented for presentation clarity.
+For example:
+</p>
+<pre class="kv">
+    database =db1
+    port     =5432
+    user     =admin
+</pre>
+
+<p>
+Note that any whitespace characters
+<em>after</em> the assignment operator <code>=</code>
+would <em>not</em> be considered optional indentation,
+but part of the value.
+</p>
+
+<p>
+The general ABNF form of a data line
+is therefore
+</p>
+<pre class="abnf">
+*WSP key *WSP OP value EOL
+</pre>
+<p>
+where <code class="abnf">*WSP</code> represents
+zero or more whitespace characters.
+</p>
+</section>
+
+<section id="sec-syntax-comment-line">
+<h3>3.2 Comment Line</h3>
+
+<p>
+A comment line has the basic form (BNF):
+</p>
+<pre class="abnf">
+"#" comment-text EOL
+</pre>
+<p>
+where <code class="abnf">#</code> is the <code>NUMBER SIGN</code> character (<code class="abnf">%x23</code>).
+</p>
+
+<p>
+For example:
+</p>
+<pre class="kv">
+# This is a comment
+</pre>
+
+<p>
+As with data lines,
+comments may be indented.
+The following lines
+are all syntactically equivalent:
+</p>
+<pre class="kv">
+# comment
+ # comment
+    # comment
+</pre>
+
+<p>
+This does <em>not</em> hold
+for whitespace characters
+<em>after</em> the <code>#</code> character,
+which are considered part of the comment text.
+Thus, the following lines are all different:
+</p>
+<pre class="kv">
+#comment
+# comment
+#    comment</pre>
+
+<p>
+General ABNF form of a comment line:
+</p>
+<pre class="abnf">
+*WSP "#" comment-text EOL
+</pre>
+</section>
+
+<section id="sec-syntax-blank-line">
+<h3>3.3 Blank Line</h3>
+
+<p>
+A blank line is an empty line
+or a line containing only whitespace characters:
+</p>
+<pre class="abnf">
+*WSP EOL
+</pre>
+<p>
+Blank lines are used for visual separation
+without semantic meaning.
+</p>
+</section>
+
+<section id="sec-syntax-eol">
+<h3>3.4 EOL</h3>
+
+<p>
+EOLs are line terminators.
+</p>
+<pre class="abnf">
+EOL = LF / CRLF
+</pre>
+<p>
+where:
+</p>
+<ul>
+    <li><code class="abnf">LF = %x0A ; LINE FEED</code></li>
+    <li><code class="abnf">CR = %x0D ; CARRIAGE RETURN</code></li>
+    <li><code class="abnf">CRLF = CR LF</code></li>
+</ul>
+<p>
+Every line in a Kv text
+MUST be terminated with an EOL
+(either LF or CRLF),
+including the final line.<sup><a href="#fn3" id="fnref3">3</a></sup>
+An EOL is considered part of the line
+(see <a href="#sec-term-eol">Section 2.6</a>).
+</p>
+</section>
+
+<section id="sec-syntax-shebang-line">
+<h3>3.5 Shebang Line (File-Level)</h3>
+
+<p>
+Shebang lines [<a href="#ref-execveman">execveman</a>]
+are file-level directives,
+not part of Kv text syntax.
+Shebangs MUST NOT be treated as comments.
+See <a href="#sec-files-shebang">Section 6.4</a> for details.</p>
+</section>
+
+</section>
+
+<section id="sec-parsing">
+
+<h2>4 Parsing</h2>
+
+<p>
+A parser processes a Kv text line by line,
+emitting a stream of entries.
+</p>
+
+<section id="sec-line-numbers">
+<h3>4.1 Line Numbers</h3>
+
+<p>
+Parsers MUST keep track of line numbers.
+</p>
+
+<ul>
+<li>Line numbers MUST be 1-based.</li>
+<li>Parsers MUST include line numbers with entries.</li>
+<li>Parsers SHOULD reference line numbers in error reporting.</li>
+</ul>
+
+</section>
+
+<section id="sec-entry-structure">
+<h3>4.2 Entry Structure</h3>
+
+<p>
+Each line is parsed into an entry
+that contains:
+</p>
+
+<ul>
+<li>
+    <em>type</em>:
+    implementation-defined means
+    to distinguish between entry types
+    (KV, comment, blank, or shebang),
+</li>
+<li>
+    <em>line</em>:
+    integer line number
+    (<a href="#sec-line-numbers">Section 4.1</a>),
+</li>
+<li>
+    <em>payload</em>:
+    type-specific data:
+    <ul>
+        <li>
+            <em>KV entries</em>:
+            two strings <em>(key, value)</em>,
+        </li>
+        <li>
+            <em>comment entries</em>:
+            one string <em>(comment text)</em>,
+        </li>
+        <li>
+            <em>blank entries</em>:
+            no payload,
+        </li>
+        <li>
+            <em>shebang entries</em>:
+            one string <em>(line content)</em>.
+        </li>
+    </ul>
+</li>
+</ul>
+
+<p>
+Entry payloads
+contain the line's semantic content;
+the EOL terminator
+is consumed during parsing
+and is not part of any entry payload.
+</p>
+
+<p>
+The method of representing entries
+(tuples, structs, objects, etc.)
+is implementation-defined.
+</p>
+
+<p>
+Keys in KV entries
+MUST NOT contain any whitespace characters.
+Any leading or trailing whitespace in a key
+MUST be removed by the parser,
+while any whitespace inside the key
+represents an <code>INVALID_KEY_ERROR</code>
+(<a href="#invalid_key_error">Appendix B.8</a>).</p>
+</section>
+
+<section id="sec-entry-stream">
+<h3>4.3 Entry Stream</h3>
+
+<p>
+Parsers emit an <strong>entry stream</strong> —
+a unidirectional flow of entries
+derived from lines in the Kv text.
+</p>
+
+<ul>
+<li>
+    For each <em>data line</em>,
+    a parser MUST emit
+    a corresponding <em>KV entry</em>.
+</li>
+<li>
+    For each <em>comment line</em>,
+    a parser MAY emit
+    a corresponding <em>comment entry</em>.
+</li>
+<li>
+    For each <em>blank line</em>,
+    a parser MAY emit
+    a <em>blank entry</em>.
+    If entries are emitted out of order
+    (e.g., parallel parsing),
+    blank entries MUST be emitted.
+</li>
+</ul>
+
+<p><strong>Shebang handling:</strong>
+When parsing a Kv file
+that begins with a shebang line
+(see <a href="#sec-files-shebang">Section 6.4</a>),
+the parser MAY emit a <em>shebang entry</em>
+for the shebang line.
+If entries are emitted out of order,
+the shebang entry MUST be emitted.
+</p>
+
+</p>
+Shebang entries MUST preserve
+all characters of the shebang line verbatim
+except the EOL terminator,
+including the <code>#!</code> prefix.
+Shebang entries MUST NOT be emitted
+for any line beyond the first.
+</p>
+</section>
+
+<section id="sec-parsing-requirements">
+<h3>4.4 General Parsing Requirements</h3>
+
+<ol>
+<li>
+    Parsers MUST parse texts
+    matching the grammar
+    defined in <a href="#apx-grammar">Appendix A</a>.
+</li>
+<li>
+    Parsers MUST detect all error conditions
+    in <a href="#apx-errors">Appendix B</a>.
+</li>
+<li>
+    Parsers MUST NOT handle
+    duplicate key detection or processing.
+    Duplicate key handling
+    is an application-level decision.
+</li>
+<li>
+    The emitted entries MUST conform
+    to the entry structure
+    (<a href="#sec-entry-structure">Section 4.2</a>)
+    and entry stream requirements
+    (<a href="#sec-entry-stream">Section 4.3</a>).</li>
+<li>
+    Parsers MAY emit entries in any order.
+    Implementations MUST document
+    their emission order.
+</li>
+</ol>
+</section>
+
+<section id="sec-whitespace-handling">
+<h3>4.5 Whitespace Handling</h3>
+
+<ol>
+<li>
+    Parsers MUST remove leading whitespace
+    (any whitespace between the start of the line
+    and the first non-whitespace character)
+    in all lines.
+</li>
+<li>
+    Parsers MUST remove whitespace
+    between keys and assignment operators.
+</li>
+<li>
+    Parsers MUST NOT remove
+    any whitespace characters
+    after the assignment operator.
+</li>
+</ol>
+</section>
+
+<section id="sec-value-preservation">
+<h3>4.6 Value Preservation</h3>
+
+<p>
+Parsers MUST treat
+all Kv text values as strings,
+and MUST preserve values <em>verbatim</em>.
+Parsers MUST NOT interpret any characters
+(including but not limited to
+quotes, backslashes, dollar signs, percent signs, etc.)
+as having special meaning
+or initiating escape sequences.
+Specifically:
+</p>
+
+<ul>
+<li>
+    quotes MUST be preserved
+    as part of the value,
+</li>
+<li>
+    backslashes MUST be preserved
+    as literal backslash characters, etc.
+</li>
+</ul>
+
+<p>
+Values MUST NOT contain EOL characters.
+All other characters,
+including any leading or trailing
+whitespace characters (see <a href="#sec-whitespace-handling">Section 4.5</a>),
+MUST be preserved verbatim.
+</p>
+
+<p>
+<strong>Empty value parsing:</strong>
+When an assignment operator
+is immediately followed by EOL,
+parsers MUST emit the value as an empty string.</p>
+</section>
+
+<section id="sec-utf8-processing">
+<h3>4.7 UTF-8 Processing</h3>
+
+<p>
+Parsers MUST ensure valid UTF-8 encoding.
+Validation may occur:
+</p>
+
+<ul>
+    <li>before parsing (whole text),</li>
+    <li>during parsing (line by line), or</li>
+    <li>while streaming.</li>
+</ul>
+
+<p>
+<strong>BOM handling:</strong>
+Kv Format does not support
+the UTF-8 Byte Order Mark (BOM).
+If a Kv text begins
+with the bytes <code>EF BB BF</code>,
+parsers MUST raise a <code>BOM_ERROR</code>
+(<a href="#bom_error">Appendix B.1</a>).</p>
+</section>
+
+<section id="sec-parser-error-handling">
+<h3>4.8 Error Handling</h3>
+
+<p>
+Parsers implement one of two models:
+</p>
+
+<ol>
+    <li>
+        <em>eager parsing</em>:
+        validate entire text before emitting entries,
+    </li>
+    <li>
+        <em>streaming parsing</em>:
+        emit entries as lines are parsed.
+    </li>
+</ol>
+
+<p>
+Parsers MUST document
+which model they implement
+and their behavior when error occurs:
+</p>
+
+<ul>
+<li>
+    eager parsers:
+    whether any entries are emitted
+    in case of error,
+</li>
+<li>
+    streaming parsers:
+    whether entries before the first error
+    are emitted,
+    and whether parsing continues
+    after errors.
+</li>
+</ul>
+
+<p>
+Lines causing errors SHOULD NOT emit entries.
+</p>
+
+<p>
+A comprehensive list of parsing errors
+is given in <a href="#apx-errors">Appendix B</a>.
+</p>
+</section>
+
+<section id="sec-parser-limits">
+<h3>4.9 Implementation Limits</h3>
+
+<p>
+This specification does not mandate
+maximum limits for:
+</p>
+
+<ul>
+    <li>line length,</li>
+    <li>number of entries in a document,</li>
+    <li>key length,</li>
+    <li>value length, or</li>
+    <li>total document size.</li>
+</ul>
+
+<p>
+Implementations MAY impose reasonable limits
+based on available resources,
+but SHOULD document these limits
+and provide clear error messages
+when limits are exceeded.
+</p>
+</section>
+
+</section>
+
+<section id="sec-semantics">
+
+<h2>5 Semantics</h2>
+
+<p>
+By design,
+Kv Format relegates most semantic choices
+to applications consuming the entry stream.
+This includes decisions such as
+value whitespace trimming,
+duplicate key handling,
+and comment preservation.
+This section is therefore limited
+to reiterating some basic principles.
+</p>
+
+<section id="sec-semantics-values-are-verbatim">
+<h3>5.1 Values are Verbatim Literals</h3>
+
+<p>
+Kv Format values preserve all characters
+exactly as written
+(see <a href="#sec-value-preservation">Section 4.6</a>).
+No characters have special meaning:
+quotes, backslashes, dollar signs,
+percent signs, etc.,
+are all literal characters.
+</p>
+
+<p>
+This design gives applications flexibility
+to interpret values according to their needs.
+For example,
+a configuration loader
+might trim trailing whitespace,
+while a round-trip serializer
+would preserve it exactly.
+</p>
+</section>
+
+<section id="sec-duplicate-keys">
+<h3>5.2 Duplicate Key Semantics</h3>
+
+<p>
+Consistent with .env file precedent,
+Kv Format texts may contain duplicate keys.
+This follows from the regular grammar:
+parsers emit entries
+without maintaining key state.
+</p>
+
+<p>
+The entry stream thus contains
+all instances of repeated keys.
+Applications consuming the entry stream
+determine how to handle duplicate keys
+according to their needs.
+Common strategies include:
+</p>
+
+<ul>
+<li>
+    <em>first wins</em>:
+    use the first occurrence,
+    ignore subsequent values;
+</li>
+<li>
+    <em>last wins</em>:
+    use the last occurrence,
+    overriding previous values;
+</li>
+<li>
+    <em>concatenate</em>:
+    join all occurrences
+    into a single string;
+</li>
+<li>
+    <em>preserve all</em>:
+    keep all values as a list/array
+    or in a multiset;
+</li>
+<li>
+    <em>reject</em>:
+    treat duplicates as error.
+</li>
+</ul>
+</section>
+
+</section>
+
+<section id="sec-files">
+
+<h2>6 File Representation</h2>
+
+<section id="sec-files-extension">
+<h3>6.1 File Extension</h3>
+
+<p>
+Kv Format files
+SHOULD use the <code>.kv</code> file extension.
+</p>
+</section>
+
+<section id="sec-files-mime-type">
+<h3>6.2 Media Type (MIME Type)</h3>
+
+<p>
+Kv Format recognizes that the same content
+may serve dual purposes:
+machine-to-machine data exchange
+and human-readable documentation.
+Following the precedent of XML
+(RFC 7303 [<a href="#ref-rfc7303">rfc7303</a>]),
+Kv Format defines two media types
+to accommodate this duality.
+</p>
+
+<p>
+<strong>Target media types:</strong>
+Should Kv Format gain sufficient adoption,
+the following media type conventions
+may serve as a basis for future IANA registration.
+</p>
+
+<ul>
+<li><code>application/kv</code></li>
+<li><code>text/kv</code></li>
+</ul>
+
+<p>
+<strong>Provisional media types:</strong>
+Until IANA registration is obtained
+following RFC 6838 [<a href="#ref-rfc6838">rfc6838</a>],
+implementations SHOULD use
+the provisional forms:
+</p>
+
+<ul>
+<li><code>application/org.kvformat</code></li>
+<li><code>text/org.kvformat</code></li>
+</ul>
+
+<p>
+The remainder of this section
+uses the target patterns
+for clarity of discussion.
+</p>
+
+<section id="sec-files-mime-type-choosing">
+<h4>6.2.1 Choosing Between <code>application/kv</code> and <code>text/kv</code></h4>
+
+<p>
+The choice depends
+on the intended use of the content:
+</p>
+
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Recommended Type</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API payloads, configuration delivery, machine-to-machine, streaming pipelines</td>
+<td><code>application/kv</code></td>
+<td>Safe default; preserves exact byte-for-byte content; no risk of EOL normalization or stripping</td>
+</tr>
+<tr>
+<td>Display in browsers, email, documentation systems, debugging output</td>
+<td><code>text/kv</code></td>
+<td>Signals human-readability; may enable inline display or syntax highlighting</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<strong>When in doubt, use <code>application/kv</code>.</strong>
+It is the safer choice
+for preserving data integrity
+across transport layers.
+</p>
+</section>
+
+<section id="sec-files-mime-type-transport">
+<h4>6.2.2 Transport Considerations for <code>text/kv</code></h4>
+
+<p>
+The <code>text/</code> top-level type
+carries inherent risks
+that senders MUST consider:
+</p>
+
+<ul>
+<li>
+    <strong>Line ending normalization:</strong>
+    Some transport systems
+    (email gateways,
+    older HTTP implementations)
+    may convert line endings
+    to local conventions
+    (e.g., CRLF → LF or vice versa).
+</li>
+<li>
+    <strong>Final EOL stripping:</strong>
+    Some systems may remove
+    the final EOL character,
+    which would cause a Kv parser
+    to raise a <code>MISSING_FINAL_EOL_ERROR</code>
+    (<a href="#missing_final_eol_error">Appendix B.10</a>).
+</li>
+<li>
+    <strong>Charset re-encoding:</strong>
+    Although Kv requires UTF-8,
+    <code>text/</code> types default to US-ASCII
+    (RFC 2046 [<a href="#ref-rfc2046">rfc2046</a>],
+    Section 4.1.2)
+    unless an explicit <code>charset</code> parameter
+    is provided.
+    This default can trigger
+    charset conversions in legacy systems.
+</li>
+</ul>
+
+<p>
+Senders SHOULD use <code>application/kv</code>
+when exact byte-for-byte preservation
+is required,
+or when the transport path
+is not fully trusted
+to preserve <code>text/</code> semantics.
+</p>
+</section>
+
+<section id="sec-files-mime-type-parameters">
+<h4>6.2.3 Parameters</h4>
+
+<p>
+Both media types support
+the following optional parameters
+(following RFC 2045 syntax
+[<a href="#ref-rfc2045">rfc2045</a>]):
+</p>
+
+<ul>
+<li>
+    <code>version</code>: OPTIONAL.
+    If present,
+    the value MUST be a string
+    (quoted or unquoted)
+    containing the Kv Format specification
+    version number (e.g., <code>1.0</code>).
+    This parameter indicates
+    which version of the Kv Format syntax
+    the content conforms to.
+</li>
+<li>
+    <code>charset</code>: The handling
+    of this parameter
+    differs by top-level type:
+    <ul>
+    <li>
+        <strong><code>application/kv</code>:</strong>
+        OPTIONAL.
+        If present,
+        the value MUST be <code>utf-8</code>.
+        Since Kv Format requires UTF-8 encoding
+        (<a href="#sec-files-encoding">Section 6.3</a>),
+        this parameter is redundant
+        but MAY be included
+        for compatibility with systems
+        that require explicit charset declaration.
+    </li>
+    <li>
+        <strong><code>text/kv</code>:</strong>
+        REQUIRED.
+        The value MUST be <code>utf-8</code>.
+        Because <code>text/</code> subtypes
+        default to US-ASCII
+        per RFC 2046,
+        omitting this parameter
+        may cause receivers
+        to misinterpret non-ASCII content.
+        Senders MUST include
+        <code>charset=utf-8</code>
+        when using the <code>text/kv</code> media type.
+    </li>
+    </ul>
+</li>
+</ul>
+
+<p>
+Both media types
+MUST be interpreted identically
+by Kv parsers upon receipt.
+</p>
+</section>
+
+<section id="sec-files-mime-type-examples">
+<h4>6.2.4 Examples</h4>
+
+<p>
+Example HTTP Content-Type headers
+using target media types:
+</p>
+<pre>
+Content-Type: application/kv
+Content-Type: application/kv; version=1.0
+Content-Type: application/kv; version=1.0; charset=utf-8
+Content-Type: text/kv; version=1.0; charset=utf-8
+Content-Type: text/kv; charset=utf-8</pre>
+
+<p>
+Example HTTP Content-Type headers
+using provisional media types:
+</p>
+<pre>
+Content-Type: application/org.kvformat; version=1.0
+Content-Type: text/org.kvformat; version="1.0"; charset="utf-8"</pre>
+
+<p>
+Note: <code>text/kv</code> without <code>charset=utf-8</code>
+is non-conformant:
+</p>
+<pre>
+Content-Type: text/kv; version=1.0
+             ← WRONG: missing required charset</pre>
+</section>
+
+<section id="sec-files-mime-type-future">
+<h4>6.2.5 Future Registration</h4>
+
+<p>
+Should Kv Format gain sufficient adoption,
+<code>application/kv</code> and <code>text/kv</code>
+may be submitted for IANA registration
+following RFC 6838 [<a href="#ref-rfc6838">rfc6838</a>].
+Until such time,
+implementations SHOULD use the provisional
+<code>application/org.kvformat</code> and <code>text/org.kvformat</code> types.
+</p>
+</section>
+
+</section>
+
+<section id="sec-files-encoding">
+<h3>6.3 File Encoding</h3>
+
+<p>
+Kv files MUST be encoded as UTF-8
+without a Byte Order Mark (BOM).
+</p>
+</section>
+
+<section id="sec-files-shebang">
+<h3>6.4 Shebang Lines</h3>
+
+<p>
+A <strong>shebang line</strong> [<a href="#ref-execveman">execveman</a>]
+is an optional first line in a Kv file
+that specifies how to execute the file
+as a script.
+Shebang lines typically have the form:
+</p>
+<pre class="kv">
+#!/path/to/interpreter [optional argument]
+</pre>
+
+<ul>
+<li>
+    Shebang lines MUST start
+    with the bytes <code>#!</code>.
+</li>
+<li>
+    Shebang lines
+    are system file-level directives
+    and are not considered part of the Kv text.
+</li>
+<li>
+    When a Kv file has a shebang line,
+    parsers MAY emit <em>shebang entries</em>
+    (<a href="#sec-entry-stream">Section 4.3</a>)
+    for round-trip serialization.
+</li>
+<li>
+    When emitting shebang entries,
+    parsers MUST preserve shebang lines
+    <em>verbatim</em>.
+    Normalization, trimming,
+    or validation of shebang content
+    MUST NOT be performed.
+</li>
+</ul>
+</section>
+
+</section>
+
+<section id="sec-examples">
+
+<h2>7 Examples</h2>
+
+<section id="sec-examples-valid">
+<h3>7.1 Valid Examples</h3>
+
+<ol>
+<li>
+<p>
+Simple examples:
+</p>
+<pre class="kv">
+APP_NAME=My Application
+API_KEY=sk_live_1234567890abcdef
+DEBUG=true
+PATH=/usr/local/bin:/usr/bin
+</pre>
+</li>
+
+<li>
+<p>
+Empty value (value is an empty string):
+</p>
+<pre class="kv">
+EMPTY=
+</pre>
+</li>
+
+<li>
+<p>
+Leading and trailing space
+in values preserved
+(values are: «<code>foo·</code>» and «<code>·bar</code>»)<sup><a href="#fn4" id="fnref4">4</a></sup>
+</p>
+<pre class="kv">
+trailing=foo·
+leading=·bar
+</pre>
+</li>
+
+<li>
+<p>
+No inline comments
+(value is «<code>1 # default value</code>»)
+</p>
+<pre class="kv">
+NOT_AS_INTENDED=1 # default value
+</pre>
+</li>
+
+<li>
+<p>
+Quotes are characters like any other
+(value is «<code>"hello"</code>»)
+</p>
+<pre class="kv">
+quoted="hello"
+</pre>
+</li>
+
+<li>
+<p>
+Backslashes are literals,
+never used as escapes
+(value is «<code>\n</code>» —
+two characters:
+a backslash and the letter "n")
+</p>
+<pre class="kv">
+BACKSLASH_N=\n
+</pre>
+</li>
+
+<li>
+<p>
+No interpolation
+(values are «<code>/usr/bin</code>»
+and «<code>$PATH:/usr/var/bin</code>»)
+</p>
+<pre class="kv">
+PATH=/usr/bin
+PATH=$PATH:/usr/var/bin
+</pre>
+</li>
+
+<li>
+<p>
+Empty comment
+(comment text is an empty string)
+</p>
+<pre class="kv">
+#
+</pre>
+</li>
+
+<li>
+<p>
+Comment consisting of a space
+(comment text is «<code>·</code>»)
+</p>
+<pre class="kv">
+#·
+</pre>
+</li>
+
+<li>
+<p>
+Comment with leading and trailing spaces
+(comment text is «<code>··comment···</code>»)
+</p>
+<pre class="kv">
+#··comment···
+</pre>
+</li>
+
+<li>
+<p>
+Duplicate keys are valid
+in the parser context
+(see <a href="#sec-duplicate-keys">Section 5.2</a>);
+this results in two emitted entries:
+</p>
+<pre class="kv">
+KEY=1
+KEY=2
+</pre>
+</li>
+</ol>
+
+</section>
+
+<section id="sec-examples-invalid">
+<h3>7.2 Invalid Examples</h3>
+
+<ol>
+<li>
+<p>
+Invalid key: dashes not allowed
+(<code>INVALID_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+KEY-NAME=value
+</pre>
+</li>
+
+<li>
+<p>
+Invalid key: cannot start with a digit
+(<code>INVALID_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+123KEY=value
+</pre>
+</li>
+
+<li>
+<p>
+Invalid key: cannot contain period
+(<code>INVALID_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+KEY.NAME=value
+</pre>
+</li>
+
+<li>
+<p>
+Missing assignment operator <code>=</code>
+(<code>MISSING_OPERATOR_ERROR</code>)
+</p>
+<pre class="kv">KEY value</pre>
+</li>
+
+<li>
+<p>
+Empty key
+(<code>EMPTY_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+=value
+</pre>
+</li>
+</ol>
+</section>
+
+<section id="sec-examples-edge-cases">
+<h3>7.3 Edge Cases</h3>
+
+<ol>
+<li>
+An empty text (0 bytes)
+is a valid Kv text
+and yields no entries.
+</li>
+
+<li>
+<p>
+Comments, not data lines
+</p>
+<pre class="kv">
+#=foo
+#key=value
+</pre>
+</li>
+
+<li>
+<p>
+Valid data line with value «<code>=foo</code>».</p>
+<pre class="kv">
+key==foo
+</pre>
+</li>
+
+<li>
+<p>
+Valid data line
+with an empty string for a value
+</p>
+<pre class="kv">
+key=
+</pre>
+</li>
+
+<li>
+<p>
+Valid data line
+with a leading space in the value:
+«<code>·abc</code>»</p>
+<pre class="kv">
+key = abc
+</pre>
+</li>
+
+<li>
+<p>
+Error — space is not an operator
+(<code>MISSING_OPERATOR_ERROR</code>)
+</p>
+<pre class="kv">
+key value
+</pre>
+</li>
+
+<li>
+<p>
+Error — colon is not an operator
+(<code>MISSING_OPERATOR_ERROR</code>)
+</p>
+<pre class="kv">
+key:value
+</pre>
+</li>
+
+<li>
+<p>
+Error — colon is not a valid key character
+(<code>INVALID_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+key:=value
+</pre>
+</li>
+
+<li>
+<p>
+Error — space is not a valid key character
+(<code>INVALID_KEY_ERROR</code>)
+</p>
+<pre class="kv">
+foo bar=value
+</pre>
+</li>
+
+<li>
+<p>
+Error: whitespace as key is
+an <code>EMPTY_KEY_ERROR</code>,
+not an <code>INVALID_KEY_ERROR</code>
+(leading whitespace may be trimmed
+before parsing the line)
+</p>
+<pre class="kv">
+·=value
+</pre>
+</li>
+
+</ol>
+</section>
+
+</section>
+
+<section id="sec-versioning">
+
+<h2>8 Versioning</h2>
+
+<p>
+Kv Format 1.<i>x</i> versions
+are not sequential updates
+in the traditional sense.
+All 1.<i>x</i> format definitions
+were designed and specified concurrently,
+then organized into
+a layered specification collection
+with progressive feature inclusion.
+This approach reflects
+the fundamental trade-off
+between feature richness
+and implementation size.
+</p>
+
+<section id="sec-versioning-layered">
+<h3>8.1 Layered Feature Progression</h3>
+
+<p>
+The Kv Format 1.<i>x</i> versions
+provide increasing functionality:</p>
+
+<ul>
+<li>
+    <strong>1.0</strong> &mdash;
+    basic key-value strings
+    with ASCII-only keys
+    (minimal .env file standard),
+</li>
+<li>
+    <strong>1.1</strong> &mdash;
+    metadata:
+    schemas,
+    type hints, encoding directives,
+    and UTF-8 support for keys,
+</li>
+<li>
+    <strong>1.2</strong> &mdash;
+    arrays
+    (support for sequences as values),
+</li>
+<li>
+    <strong>1.3</strong> &mdash;
+    namespaced keys,
+</li>
+<li>
+    <strong>1.4</strong> &mdash;
+    structs
+    (support for nested key/value data as values).
+</li>
+</ul>
+
+<p>
+Each version includes all features
+of previous versions.
+The complete 1.4 specification
+is not an "update" to 1.0
+but a superset specification
+that adds new syntactic constructs
+while maintaining backward compatibility.
+</p>
+
+<p>
+As a regular language,
+Kv Format implementations
+are expected to outperform
+context-free alternatives
+(JSON, TOML, YAML)
+while maintaining
+significantly smaller parser binary footprints
+(compiled implementation size).
+The layered version approach directly addresses
+resource-constrained systems
+by enabling implementers
+to choose the minimal feature set
+their application requires:
+</p>
+
+<ul>
+<li>
+    Applications needing only
+    basic key-value strings
+    (e.g., environment variables with ASCII keys)
+    can implement Kv Format 1.0,
+    yielding a binary
+    typically a fraction of the size
+    of a full 1.4 implementation.
+</li>
+<li>
+    Applications requiring
+    Unicode keys
+    but not arrays or structs
+    can implement Kv Format 1.1,
+    still significantly smaller
+    than versions 1.2+.
+</li>
+<li>
+    Applications needing arrays
+    but not namespaces or nested structures
+    can implement Kv Format 1.2,
+    balancing functionality with size.
+</li>
+</ul>
+
+<p>
+Each successive version
+adds parsing complexity
+and increases the minimum implementation size.
+The version numbers
+thus serve as size/complexity indicators
+rather than "latest and greatest" markers.
+</p>
+</section>
+
+<section id="sec-versioning-implementation">
+<h3>8.2 Implementation Versioning</h3>
+
+<p>
+To help users select
+optimal implementations
+for their constraints,
+Kv Format recommends
+an unorthodox implementation
+versioning scheme:
+</p>
+
+<ul>
+<li>
+    Implementations
+    SHOULD use Semantic Versioning (SemVer)
+    [<a href="#ref-semver">semver</a>],
+    where the <strong>major version</strong>
+    corresponds to
+    <strong>10 times the Kv Format version</strong>
+    implemented
+    (with the version period
+    interpreted as a decimal point).
+</li>
+<li>
+    The <strong>minor and patch</strong> versions
+    represent the implementation's own
+    release cycle
+    (features, bug fixes, etc.).
+</li>
+</ul>
+
+<p>
+Examples:
+</p>
+
+<ul>
+<li>
+    A 1.0-compliant implementation's
+    first release:
+    <code>10.0.0</code>
+</li>
+<li>
+    Updated 1.0 implementation
+    with bug fixes:
+    <code>10.0.1</code>
+</li>
+<li>
+    Major rewrite of 1.0 implementation:
+    <code>10.1.0</code>
+</li>
+<li>
+    A 1.3-compliant implementation:
+    <code>13.0.0</code>
+</li>
+<li>
+    A 1.4 implementation with new features:
+    <code>14.2.0</code>
+</li>
+</ul>
+
+<p>
+This scheme provides
+immediate visual identification
+of format support:
+the major version 10-14
+directly maps to the supported feature set,
+while preserving semantic versioning semantics
+for the implementation itself.
+</p>
+
+<p>
+Even in languages capable of feature-gating
+as means of controlling the features included
+and the binary size (e.g., Rust),
+this idiosyncratic parser versioning scheme
+(<code>v10.x.x</code>-<code>v14.x.x</code>)
+can help users identify
+the Kv Format libraries and tools
+among the plethora of existing
+"kv"-named packages.
+</p>
+
+<p>
+This versioning scheme
+applies to the Kv Format 1.<i>x</i>
+specification series,
+which at the time of Kv Format 1.0 publication
+includes versions 1.0 - 1.4.
+Any possible future version mapping
+will be addressed
+in those versions' specifications.
+</p>
+
+</section>
+
+</section>
+
+<h2 class="part-title">Part II — Kv Core (v1.1)</h2>
+
+<section id="sec-format-declaration">
+<h2>9 Format Declaration</h2>
+<p>
+The simplest format declaration is
+the <strong>version declaration</strong>, identifying the Kv Format version
+the Kv text conforms to.
+The full syntax including schemas is deferred
+to <a href="#sec-schemas">Section 11</a>.
+</p>
+
+<section id="sec-version-declaration-syntax">
+<h3>9.1 Version Declaration Syntax</h3>
+<p>
+If present, the version declaration MUST appear on the first line
+of the Kv text.
+The syntax is:
+</p>
+<pre class="abnf">
+"!kv" WSP version
+</pre>
+<p>
+where <code class="abnf">version</code> is a valid Kv version identifier
+(<a href="#sec-version-identifiers">Section 10.3</a>),
+for example:
+</p>
+<pre class="kv">
+!kv 1.1
+</pre>
+<p>
+The version declaration is OPTIONAL.
+If omitted, parsers SHOULD parse the Kv text
+using the latest 1.<i>x</i> version they support.
+</p>
+</section>
+
+<section id="sec-version-declaration-errors">
+<h3>9.2 Version Declaration Errors</h3>
+<ul>
+<li>
+    A parser encountering an invalid version format
+    (semver number + optional "u" suffix)
+    MUST raise an <code>INVALID_VERSION_ERROR</code>.
+</li>
+<li>
+    A parser encountering a version that is in valid format,
+    but not implemented by the parser
+    MUST raise an <code>UNSUPPORTED_VERSION_ERROR</code>.
+</li>
+<li>
+    A version declaration placed in a Kv text not on the first line
+    MUST be parsed as a metadata line
+    (<a href="#sec-metadata-entries">Section 12</a>),
+    raising an <code>INVALID_DIRECTIVE_ERROR</code>.
+</li>
+</ul>
+</section>
+
+</section>
+
+<section id="sec-kv-variants">
+<h2>10 Kv Variants</h2>
+<p>
+Starting with version 1.1, Kv format supports two variants,
+which are identical in all respects
+except for the key alphabet:
+</p>
+<ol>
+<li>
+    <strong>standard variant</strong>, conforming to the Kv Format 1.0
+    keys definition (ASCII characters only),
+</li>
+<li>
+    <strong>Unicode variant</strong>, generalizing keys to UTF-8 characters.
+</li>
+</ol>
+
+<section id="sec-unicode-keys">
+<h3>10.1 Unicode Keys</h3>
+<p>
+In the Unicode Kv variant,
+keys are no longer restricted to ASCII characters.
+Keys still MUST:
+</p>
+<ul>
+<li>start with an underscore or a letter,</li>
+<li>contain only underscores and alphanumeric characters.</li>
+</ul>
+<p>
+Only now, the definition of what constitutes
+a letter or an alphanumeric character
+is extended from ASCII to full Unicode.
+See <a href="#apx-grammar">Appendix A</a> for technical details.
+</p>
+<p>
+Note: The underscore remains ASCII-only (<code>U+005F</code>),
+and doesn&#39;t include other underscore-like characters.
+</p>
+</section>
+
+<section id="sec-unicode-keys-examples">
+<h3>10.2 Examples</h3>
+<pre class="kv">
+!kv 1.1u
+# Unicode keys allowed
+名前=山田
+用户_ID=12345
+</pre>
+</section>
+
+<section id="sec-version-identifiers">
+<h3>10.3 Version Identifiers</h3>
+<ul>
+<li>
+    The <em>standard variant</em>
+    is represented by a standard semver identifier
+    with a major and a minor version, e.g., "1.1".
+</li>
+<li>
+    The <em>Unicode variant</em>
+    uses a "u" suffix appended to the semver version,
+    e.g., "1.1u".
+</li>
+</ul>
+<p>
+Version 1.0 only supports the standard variant.
+</p>
+</section>
+
+</section>
+
+<section id="sec-schemas">
+<h2>11 Schemas</h2>
+<p>
+A <strong>schema</strong> is a special Kv text specifying the structure
+of data-bearing Kv texts.
+As schemas are Kv texts themselves, in this section
+we refer to non-schema Kv texts as <em>data texts</em>.
+</p>
+
+<section id="sec-schema-declaration">
+<h3>11.1 Schema declaration</h3>
+<p>
+Data texts can reference a schema URL in the format declaration:
+</p>
+<pre class="kv">
+!kv 1.1 https://example.org/schema.kv
+</pre>
+<p>
+Parsers SHOULD NOT validate texts against schemas —
+this is inconsistent with the lightweight design of Kv Format parsers.
+Schema validation is the responsibility of the application
+consuming the entry stream.
+</p>
+<p>
+The referenced schema SHOULD be a file resolvable at the specified URL.
+Applications MAY implement caching of schemas or an aliasing system
+to local schema files.
+</p>
+</section>
+
+<section id="sec-schema-definition">
+<h3>11.2 Schema Definition</h3>
+<p>
+The schema file contains a valid Kv Format syntax,
+differing only in the format declaration:
+a schema file MUST use the <code>!kvschema</code> format declaration,
+followed by the Kv Format version and the canonical URL, for example:
+</p>
+<pre class="kv">
+!kvschema 1.1 https://example.org/schema.kv
+</pre>
+<p>
+A schema text itself includes no data, only keys
+that define the Kv text structure for concrete Kv texts.
+This is a definition by example: the schema simply lists
+the keys with assignment operators and empty values.
+For example:
+</p>
+<pre class="kv">
+HOST=
+PORT=
+</pre>
+</section>
+
+<section id="sec-schema-required-keys">
+<h3>11.3 Required Keys</h3>
+<p>
+By default, the keys defined in the schema are not required
+in the data text.
+If the data text omits a key from the schema,
+applications MUST treat it as if defined with an empty value.
+</p>
+<p>
+Keys can be marked as required in the schema,
+in which case the corresponding values in conforming data texts
+MUST NOT be empty.
+Required keys are defined by setting the value in the schema to <code>!</code>:
+</p>
+<pre class="kv">
+!kvschema 1.1 https://schema.example.org/server.kv
+HOST=!
+PORT=
+</pre>
+<p>
+Here, <code>HOST</code> is required but <code>PORT</code> is not.
+</p>
+</section>
+
+<section id="sec-schema-relaxed">
+<h3>11.4 Relaxed Schemas</h3>
+<p>
+Schemas are <strong>relaxed</strong> by default,
+i.e. data texts may contain keys not defined in the schema.
+For example, we may define an RPC request schema
+to include only a <code>method</code> key:
+</p>
+<pre class="kv">
+!kvschema 1.1 https://schema.example.org/rpc-request.kv
+method=!
+</pre>
+<p>
+An actual data text could then simply list any arguments
+as additional keys:
+</p>
+<pre class="kv">
+!kv 1.1 https://schema.example.org/rpc-request.kv
+method=AddNumbers
+x=1
+y=2
+</pre>
+</section>
+
+<section id="sec-schema-strict">
+<h3>11.5 Strict Schemas</h3>
+<p>
+A schema can be defined as strict with the <code>:strict</code> modifier:
+</p>
+<pre class="kv">
+!kvschema:strict 1.1 https://example.org/schema.kv
+</pre>
+<p>
+A data text is conforming to a strict schema only if
+it includes no other keys than the ones defined by the schema.
+</p>
+</section>
+
+<section id="sec-schema-format-declaration-syntax">
+<h3>11.6 General Format Declaration Syntax</h3>
+<p>Data texts:</p>
+<pre class="abnf">
+"!kv" WSP version [WSP schema-url]
+</pre>
+<p>Schema definition:</p>
+<pre class="abnf">
+"!kvschema" [":strict"] WSP version WSP canonical-url
+</pre>
+</section>
+
+</section>
+
+<section id="sec-metadata-entries">
+<h2>12 Metadata Entries</h2>
+<p>
+Type annotations (<a href="#sec-type-annotations">Section 13</a>)
+and encoding directives (<a href="#sec-b64">Section 14</a>)
+are collectively termed <strong>metadata lines</strong>,
+and parsers may emit corresponding <strong>metadata entries</strong>.
+</p>
+<p>
+When metadata entries are produced,
+they MUST contain the line number
+and the entire content of the line following the <code>!</code> character
+up to and not including the EOL.
+</p>
+<p>
+Applications consuming entries may establish relationships
+between metadata entries and data entries based on their line numbers,
+and use this metadata for processing
+(e.g., type casting, base64 decoding etc.).
+</p>
+</section>
+
+<section id="sec-type-annotations">
+<h2>13 Type Annotations</h2>
+
+<section id="sec-type-annotations-syntax">
+<h3>13.1 Syntax</h3>
+<p>
+A <strong>type annotation</strong> is a metadata line starting with <code>!</code>
+and followed by a recognized type keyword.
+Type annotations indicate the intended value type
+of the immediately following data line.
+For example:
+</p>
+<pre class="kv">
+!int
+index=1
+
+!bool
+admin=true
+
+!dec
+pi=3.14159265
+</pre>
+<p>
+Valid type annotations are:
+<code>!bool</code>, <code>!int</code>, <code>!hex</code>, <code>!b</code>,
+<code>!float</code>, <code>!dec</code>, <code>!date</code>, <code>!time</code>,
+<code>!timestamp</code>, <code>!json</code>, <code>!xml</code> and <code>!html</code>.
+</p>
+</section>
+
+<section id="sec-type-annotations-semantics">
+<h3>13.2 Semantics</h3>
+<p>
+Type annotations provide information that applications may use
+when processing the following data line.
+A type annotation cannot be applied to more than one line.
+In case of multiple lines using the same type annotation,
+each data line must have a type annotation immediately preceding it.
+</p>
+<p>
+Type annotation lines are considered <em>content lines</em>
+in the sense of <a href="#sec-term-text-elements">Section 2.3</a>.
+</p>
+</section>
+
+<section id="sec-type-annotations-standard">
+<h3>13.3 Standard Type Annotations</h3>
+<p>Types supported:</p>
+<ul>
+<li><code>bool</code>: any boolean representation,</li>
+<li><code>int</code>: integer,</li>
+<li><code>hex</code>: hexadecimal representation of a number,</li>
+<li><code>b</code>: binary representation of a number,</li>
+<li><code>float</code>: floating point number,</li>
+<li><code>dec</code>: decimal number (fixed precision),</li>
+<li><code>date</code>: a date in ISO format (YYYYMMDD or YYYY-MM-DD),</li>
+<li><code>time</code>: a time in ISO format (e.g. YYYY-MM-DDThh:mm:ss),
+    with optional time zone information (UTC assumed if TZ absent),</li>
+<li><code>timestamp</code>: a POSIX timestamp (number of seconds since the Unix Epoch),</li>
+<li><code>json</code>: an inline JSON object,</li>
+<li><code>xml</code>: an inline XML fragment,</li>
+<li><code>html</code>: an inline HTML fragment.</li>
+</ul>
+</section>
+
+<section id="sec-type-annotations-custom">
+<h3>13.4 Custom Type Annotations</h3>
+<p>
+Domain-specific types can use the <code>!x/</code> prefix
+for <strong>custom type annotations</strong>, for example:
+</p>
+<pre class="kv">
+!x/customerID
+</pre>
+<p>
+Custom type annotations are free-form entries,
+the only exception being
+that <code>!x/b64</code> is reserved for custom encoding directives
+(<a href="#sec-b64">Section 14</a>).
+</p>
+</section>
+
+<section id="sec-type-annotations-parsing">
+<h3>13.5 Parsing Requirements</h3>
+<p>
+Parsers MAY ignore type annotation lines,
+or MAY produce corresponding <strong>metadata entries</strong>.
+If entries are emitted out of order,
+metadata entries MUST be emitted.
+</p>
+<p>
+Type annotations have no effect on parser behavior;
+applications consuming entries may use them for validation,
+type casting, or documentation.
+</p>
+<p>
+Parsers MUST handle custom and standard type annotations equally.
+</p>
+</section>
+
+</section>
+
+<section id="sec-b64">
+<h2>14 Encoding Directive</h2>
+<p>
+Kv Format&#39;s single-line value constraint presents a limitation
+for embedding multi-line or binary data in Kv texts.
+The <code>!b64</code> encoding directive addresses this
+by indicating that the following data line&#39;s value is base64url-encoded.
+</p>
+
+<section id="sec-b64-syntax">
+<h3>14.1 Syntax</h3>
+<pre class="kv">
+!b64 TYPE
+KEY=VALUE
+</pre>
+<p>
+where <code>TYPE</code> indicates the encoded content type, typically:
+</p>
+<ul>
+<li>a UTF-8 string that may be multi-line
+    (omitted <code>TYPE</code> argument),</li>
+<li>a file extension
+    (e.g., <code>json</code>, <code>toml</code>, <code>md</code>, <code>html</code>, <code>xml</code>, <code>yaml</code>),</li>
+<li>a registered MIME type
+    (e.g., <code>text/calendar</code>, <code>application/atom+xml</code>,
+    <code>application/octet-stream</code>),</li>
+</ul>
+<p>
+Any custom types should use either:
+</p>
+<ul>
+<li>the generic string type: <code>!b64</code>;</li>
+<li>the generic binary type: <code>!b64 bin</code>;</li>
+<li>or use the private <code>!x/b64</code> directive for arbitrary types,
+    for example:
+<pre class="kv">
+!x/b64 ProductDetails
+</pre>
+</li>
+</ul>
+</section>
+
+<section id="sec-b64-variant">
+<h3>14.2 Base64url Variant</h3>
+<p>
+The <code>!b64</code> directive specifically refers to the <em>base64url</em>
+variant ([<a href="#ref-rfc4648">rfc4648</a>] §5), which uses the URL-safe alphabet
+(<code>A-Z a-z 0-9 -_</code>) and omits padding characters (<code>=</code>)
+unless required for decoder compatibility.
+</p>
+</section>
+
+<section id="sec-b64-examples">
+<h3>14.3 Examples</h3>
+<pre class="kv">
+!b64
+MULTI_LINE_STRING=aBcde123Pcgw
+
+!b64 json
+CONFIG=eyJzdGF0dXMiOiJPSyIsImVuYWJsZWQidHJ1ZX0K
+
+!b64 yaml
+SETTINGS=LS0tCmRlYnVnOiB0cnVlCnBvcnQ6IDgwODAK
+
+!b64 application/octet-stream
+CERTIFICATE=MIICljCCAX4CAQAwDQYJKoZIhvcNAQEFBQA...
+</pre>
+</section>
+
+<section id="sec-b64-parsing">
+<h3>14.4 Parsing Requirements</h3>
+<p>
+Parsers MUST produce a metadata entry
+for each <code>!b64</code> or <code>!x/b64</code> line
+(<a href="#sec-metadata-entries">Section 12</a>).
+The base64url encoding validation, decoding and interpretation
+of the encoded content is the application&#39;s responsibility.
+</p>
+</section>
+
+</section>
+
+<section id="sec-kv-comment-syntax">
+<h2>15 Kv Comment Syntax</h2>
+<p>
+Starting with version 1.1, Kv Format supports two comment styles:
+</p>
+<ul>
+<li>Legacy style: <code># comment</code> (inherited from .env files)</li>
+<li>Kv style: <code>!// comment</code> (consistent with metadata syntax)</li>
+</ul>
+<p>
+Parsers MUST treat the two styles as semantically identical,
+producing the same internal representation.
+</p>
+<p>
+The <code>!//</code> style is recommended for international interoperability,
+due to the <code>#</code> character not being accessible
+on many non-ASCII keyboard layouts.
+</p>
+</section>
+
+<section id="sec-metadata-forward-compat">
+<h2>16 Metadata Forward Compatibility</h2>
+<p>
+While Kv Format 1.<i>x</i> parsers simply emit entries (or not)
+for metadata lines (type annotations and encoding directives),
+without validation or considering the context
+(whether a metadata is actually followed by a data line),
+this behavior may change in the future.
+The following general principles provide guidance
+to ensure forward compatibility:
+</p>
+<ul>
+<li>
+    A metadata line should be followed immediately by a data line.
+    A blank line, a comment line, or EOF following a metadata line
+    may trigger a syntax error in the future.
+</li>
+<li>
+    The scope of a metadata line is a single data line.
+    In order to apply the same metadata line to several data lines,
+    a copy of the metadata line must precede each data line.
+</li>
+</ul>
+</section>
+
+<section id="sec-references">
+
+<h2>17 References</h2>
+
+<dl>
+    <dt id="ref-aho06">[Aho06]</dt>
+    <dd>Aho, Alfred V., Lam, Monica S., Sethi, Ravi, and Ullman, Jeffrey D.
+        <em>Compilers: Principles, Techniques, and Tools</em>, 2nd edition.
+        Addison-Wesley, 2006. ISBN 978-0-321-48681-3.</dd>
+
+    <dt id="ref-rfc2045">[rfc2045]</dt>
+    <dd>Freed, Ned and Borenstein, Nathaniel S.
+        <em>Multipurpose Internet Mail Extensions (MIME) Part One: Format of Internet Message Bodies</em>.
+        RFC 2045, RFC Editor, November 1996.
+        <a href="https://www.rfc-editor.org/rfc/rfc2045.html">https://www.rfc-editor.org/rfc/rfc2045.html</a></dd>
+
+    <dt id="ref-rfc2046">[rfc2046]</dt>
+    <dd>Freed, Ned and Borenstein, Nathaniel S.
+        <em>Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types</em>.
+        RFC 2046, RFC Editor, November 1996.
+        <a href="https://www.rfc-editor.org/rfc/rfc2046.html">https://www.rfc-editor.org/rfc/rfc2046.html</a></dd>
+
+    <dt id="ref-rfc2119">[rfc2119]</dt>
+    <dd>Bradner, Scott.
+        <em>Key words for use in RFCs to Indicate Requirement Levels</em>.
+        RFC 2119, RFC Editor, March 1997.
+        <a href="https://www.rfc-editor.org/rfc/rfc2119.html">https://www.rfc-editor.org/rfc/rfc2119.html</a></dd>
+
+    <dt id="ref-rfc4648">[rfc4648]</dt>
+    <dd>Josefsson, S.
+        <em>The Base16, Base32, and Base64 Data Encodings</em>.
+        RFC 4648, RFC Editor, October 2006.
+        <a href="https://www.rfc-editor.org/rfc/rfc4648.html">https://www.rfc-editor.org/rfc/rfc4648.html</a></dd>
+
+    <dt id="ref-rfc5234">[rfc5234]</dt>
+    <dd>Crocker, Dave and Overell, Paul.
+        <em>Augmented BNF for Syntax Specifications: ABNF</em>.
+        RFC 5234, RFC Editor, January 2008.
+        <a href="https://www.rfc-editor.org/rfc/rfc5234.html">https://www.rfc-editor.org/rfc/rfc5234.html</a></dd>
+
+    <dt id="ref-unicode">[unicode]</dt>
+    <dd>The Unicode Consortium.
+        <em>The Unicode Standard</em>, Version 15.0.0. 2023.
+        <a href="https://www.unicode.org/versions/Unicode15.0.0/">https://www.unicode.org/versions/Unicode15.0.0/</a></dd>
+
+    <dt id="ref-execveman">[execveman]</dt>
+    <dd>Linux/BSD man-pages project.
+        <em>execve(2) — execute a file</em>. 2023.
+        <a href="https://man7.org/linux/man-pages/man2/execve.2.html">https://man7.org/linux/man-pages/man2/execve.2.html</a></dd>
+
+    <dt id="ref-rfc7303">[rfc7303]</dt>
+    <dd>Thompson, Henry S. and Lilley, Chris.
+        <em>XML Media Types</em>.
+        RFC 7303, RFC Editor, July 2014.
+        <a href="https://www.rfc-editor.org/rfc/rfc7303.html">https://www.rfc-editor.org/rfc/rfc7303.html</a></dd>
+
+    <dt id="ref-rfc6838">[rfc6838]</dt>
+    <dd>Freed, Ned, Klensin, John C., and Hansen, Tony.
+        <em>Media Type Specifications and Registration Procedures</em>.
+        RFC 6838, RFC Editor, January 2013.
+        <a href="https://www.rfc-editor.org/rfc/rfc6838.html">https://www.rfc-editor.org/rfc/rfc6838.html</a></dd>
+
+    <dt id="ref-semver">[semver]</dt>
+    <dd>Preston-Werner, Tom.
+        <em>Semantic Versioning 2.0.0</em>. 2013.
+        <a href="https://semver.org/">https://semver.org/</a></dd>
+</dl>
+
+</section>
+
+<section id="apx-grammar">
+<h2>Appendix A: Formal Grammar</h2>
+<p>
+The following two grammars
+represent the normative definition
+of Kv Format syntax
+for the two variants
+(<em>standard</em> and <em>Unicode</em>).
+In case of any ambiguities
+in the descriptive main text
+of this specification,
+this grammar has precedence.
+</p>
+
+<section id="apx-grammar-standard">
+<h3>A.1 Standard Variant Grammar</h3>
+<pre class="abnf">
+kv-text = [format-declaration] *(kv-line)
+format-declaration = "!kv" WSP version [WSP schema-url] EOL
+version = "1.0" / "1.1"
+schema-url = 1*valid-char
+kv-line = data-line / type-annotation-line / b64-line
+        / comment-line / blank-line
+data-line = *WSP key *WSP "=" value EOL
+type-annotation-line = *WSP "!" type EOL
+type = "bool" / "int" / "hex" / "b" / "float" / "dec"
+     / "date" / "time" / "timestamp"
+     / "json" / "xml" / "html"
+     / ("x/" *valid-char)
+b64-line      = *WSP "!b64" [WSP encoded-type] EOL
+encoded-type  = 1*type-char
+type-char     = ALPHA / DIGIT / "/" / "+" / "-" / "."
+comment-line = *WSP ("#" / "!//") comment-text EOL
+blank-line = *WSP EOL
+key = ( ALPHA / "_" ) *( ALPHA / DIGIT / "_" )
+value = *valid-char
+comment-text = *valid-char
+; Terminals
+EOL = LF / CRLF
+valid-char = %x01-09 / %x0B-0C / %x0E-10FFFF
+</pre>
+<p>
+The rules from
+RFC 5234 [<a href="#ref-rfc5234">rfc5234</a>]
+are used:
+</p>
+<ul>
+<li><code class="abnf">ALPHA = %x41-5A / %x61-7A</code> (A-Z / a-z)</li>
+<li><code class="abnf">DIGIT = %x30-39</code> (0-9)</li>
+<li><code class="abnf">LF = %x0A</code> (line feed)</li>
+<li><code class="abnf">CR = %x0D</code> (carriage return)</li>
+<li><code class="abnf">CRLF = CR LF</code></li>
+<li><code class="abnf">WSP = SP / HTAB</code>
+    i.e. <code class="abnf">WSP = %x20 / %x09</code>
+    (space or tab)</li>
+</ul>
+</section>
+
+<section id="apx-grammar-unicode">
+<h3>A.2 Unicode Variant Grammar</h3>
+<pre class="abnf">
+kv-text = [format-declaration] *(kv-line)
+format-declaration = "!kv" WSP version [WSP schema-url] EOL
+schema-url = 1*valid-char
+version = "1.1u"
+kv-line = data-line / type-annotation-line / b64-line
+        / comment-line / blank-line
+data-line = *WSP key *WSP "=" value EOL
+type-annotation-line = *WSP "!" type EOL
+type = "bool" / "int" / "hex" / "b" / "float" / "dec"
+     / "date" / "time" / "timestamp"
+     / "json" / "xml" / "html"
+     / ("x/" *valid-char)
+b64-line      = *WSP "!b64" [WSP encoded-type] EOL
+encoded-type  = 1*type-char
+type-char     = ALPHA / DIGIT / "/" / "+" / "-" / "."
+comment-line = *WSP ("#" / "!//") comment-text EOL
+blank-line = *WSP EOL
+key = ( unicode-alpha / "_" ) *( unicode-alpha / unicode-digit / "_" )
+value = *valid-char
+comment-text = *valid-char
+; Terminals
+EOL = LF / CRLF
+valid-char = %x01-09 / %x0B-0C / %x0E-10FFFF
+; Note on unicode-alpha and unicode-digit:
+; - unicode-alpha includes all code points with Unicode property: Alphabetic = true
+; - unicode-digit includes all code points with Unicode property: General_Category = Decimal_Number
+</pre>
+<p>
+The rules from
+RFC 5234 [<a href="#ref-rfc5234">rfc5234</a>]
+are used:
+</p>
+<ul>
+<li><code class="abnf">ALPHA = %x41-5A / %x61-7A</code> (A-Z / a-z)</li>
+<li><code class="abnf">DIGIT = %x30-39</code> (0-9)</li>
+<li><code class="abnf">LF = %x0A</code> (line feed)</li>
+<li><code class="abnf">CR = %x0D</code> (carriage return)</li>
+<li><code class="abnf">CRLF = CR LF</code></li>
+<li><code class="abnf">WSP = SP / HTAB</code>
+    i.e. <code class="abnf">WSP = %x20 / %x09</code>
+    (space or tab)</li>
+</ul>
+</section>
+
+<section id="apx-grammar-notes">
+<h3>A.3 Notes</h3>
+<p>
+<strong>Note on <code>valid-char</code>:</strong>
+The <code>valid-char</code> rule
+explicitly excludes
+NUL (<code>U+0000</code>),
+LF (<code>U+000A</code>),
+and CR (<code>U+000D</code>)
+for parsing reasons.
+Implementations MUST perform
+UTF-8 validation separately
+(<a href="#sec-utf8-processing">Section 4.7</a>).
+As <code>valid-char</code> includes
+only valid code points,
+the range <code>U+D800</code> to <code>U+DFFF</code> (UTF-16 surrogates)
+is therefore implicitly excluded.
+</p>
+<p>
+<strong>Note on EOF:</strong>
+This grammar requires every line
+to be terminated by EOL.
+Input where the final line
+lacks an EOL terminator
+does not match this grammar;
+parsers MUST raise a
+<code>MISSING_FINAL_EOL_ERROR</code>
+(<a href="#missing_final_eol_error">Appendix B.10</a>).
+See footnote <a href="#fn3">3</a>
+for the rationale behind this strict requirement.
+</p>
+<p>
+<strong>Note on Unicode character properties:</strong>
+Implementations MUST consult
+the Unicode Character Database
+or equivalent authoritative source
+to determine these properties
+(e.g. Chapter 4
+of the Unicode Standard [<a href="#ref-unicode">unicode</a>]).
+</p>
+</section>
+
+<section id="apx-grammar-schema">
+<h3>A.4 Schema Definition</h3>
+<p>
+A schema definition conforms to data text grammars in all respects
+with the following divergences:
+</p>
+<ul>
+<li>The format declaration line is required for schemas.</li>
+<li>Schema definitions use the <code>!kvschema</code> format declaration
+    syntax instead of <code>!kv</code>.</li>
+<li>The format declaration command
+    is optionally suffixed with <code>:strict</code>.</li>
+<li>The schema URL (the schema&#39;s own canonical URL) is required.</li>
+</ul>
+<p>A schema format declaration is thus:</p>
+<pre class="abnf">
+format-declaration = "!kvschema" [":strict"] WSP version WSP schema-url EOL
+</pre>
+<p>
+<strong>Values:</strong>
+All values in a schema must be either empty
+(assignment operator immediately followed by EOL),
+or equal to <code>!</code>.
+</p>
+</section>
+
+</section>
+
+<section id="apx-errors">
+<h2>Appendix B: Error Conditions</h2>
+<p class="non-normative">
+Changes since v1.0: added <code>INVALID_VERSION_ERROR</code>, <code>UNSUPPORTED_VERSION_ERROR</code>, and <code>INVALID_DIRECTIVE_ERROR</code>.
+</p>
+<p>
+This appendix classifies
+the cases of parse failures.
+If feasible in the implementation environment,
+in case of parse failures,
+parsers SHOULD return
+one of the errors below.
+If possible,
+error reports SHOULD include line numbers
+(<a href="#sec-line-numbers">Section 4.1</a>).
+</p>
+<p>
+The errors below
+are listed in order of priority.
+In case of multiple errors
+occurring on any line,
+parsers MUST report
+the highest priority error,
+and MAY report further errors
+from the same line.
+</p>
+
+<section id="bom_error">
+<h3>B.1 <code>BOM_ERROR</code></h3>
+<p>
+A Kv text MUST NOT begin
+with a UTF-8 BOM sequence
+(EF BB BF) [<a href="#ref-unicode">unicode</a>].
+Parsers MUST detect
+texts starting with the BOM sequence
+and raise a <code>BOM_ERROR</code>.
+</p>
+<ul>
+<li>BOM detection must occur before any other parsing action (including UTF-8 validation).</li>
+<li>The BOM bytes MUST NOT be interpreted as part of the Kv text syntax.</li>
+<li>BOM errors occur before line parsing begins, and SHOULD be reported without line numbers.</li>
+</ul>
+<p>
+Whether parsing proceeds
+after this error detection
+follows the implementation&#39;s
+error handling strategy.
+</p>
+</section>
+
+<section id="invalid_utf8_error">
+<h3>B.2 <code>INVALID_UTF8_ERROR</code></h3>
+<p>
+Parsers MUST process input as UTF-8.
+Upon encountering invalid UTF-8 sequences,
+parsers MUST raise an <code>INVALID_UTF8_ERROR</code>.
+</p>
+</section>
+
+<section id="invalid_version_error">
+<h3>B.3 <code>INVALID_VERSION_ERROR</code></h3>
+<p>
+When encountering a version declaration,
+parsers MUST parse the version
+as the second token on the line
+(the <code>!kv</code> command being the first).
+</p>
+<p>
+If the version
+does not match the semver format
+<code>/^[0-9]+\.[0-9]+(\.[0-9]+)?$/</code>
+with an optional <code>u</code> suffix,
+parsers MUST raise an <code>INVALID_VERSION_ERROR</code>.
+</p>
+</section>
+
+<section id="unsupported_version_error">
+<h3>B.4 <code>UNSUPPORTED_VERSION_ERROR</code></h3>
+<p>
+If the version is not one of:
+<code>1.0</code>, <code>1.1</code>, or <code>1.1u</code>,
+parsers MUST raise an <code>UNSUPPORTED_VERSION_ERROR</code>.
+</p>
+<p>
+Parsers also MUST raise <code>UNSUPPORTED_VERSION_ERROR</code>
+if they don&#39;t implement a particular version.
+For example, if the version is <code>1.1u</code>
+and the parser does not support
+the necessary Unicode key validation.
+</p>
+<p>
+Parsers implementing <code>1.1</code> or <code>1.1u</code>
+MUST NOT raise <code>UNSUPPORTED_VERSION_ERROR</code>
+on encountering <code>1.0</code>
+as <code>1.0</code> files are valid
+both under Kv Format <code>1.1</code> and <code>1.1u</code> grammar.
+</p>
+</section>
+
+<section id="invalid_character_error">
+<h3>B.5 <code>INVALID_CHARACTER_ERROR</code></h3>
+<p>
+Kv text MUST NOT contain
+standalone CR characters (<code>U+000D</code>)
+or NUL characters (<code>U+0000</code>).
+Parsers MUST raise an
+<code>INVALID_CHARACTER_ERROR</code>
+when encountering:
+</p>
+<ul>
+<li>a CR character (<code>U+000D</code>) that is not part of a CRLF sequence</li>
+<li>a NUL character (<code>U+0000</code>)</li>
+</ul>
+</section>
+
+<section id="empty_key_error">
+<h3>B.6 <code>EMPTY_KEY_ERROR</code></h3>
+<p>
+A key MUST NOT be an empty string
+or consist of whitespace characters.
+If a data line starts
+with the assignment operator
+optionally preceded by whitespace,
+parsers MUST raise an
+<code>EMPTY_KEY_ERROR</code>.
+</p>
+</section>
+
+<section id="missing_operator_error">
+<h3>B.7 <code>MISSING_OPERATOR_ERROR</code></h3>
+<p>
+If a data line
+(i.e., a line that is neither blank
+nor a comment line)
+does not contain an assignment operator,
+parsers MUST raise a
+<code>MISSING_OPERATOR_ERROR</code>.
+</p>
+</section>
+
+<section id="invalid_key_error">
+<h3>B.8 <code>INVALID_KEY_ERROR</code></h3>
+<p>All keys in a Kv text MUST conform to the key patterns.</p>
+<ul>
+<li>Standard variant (<code>!kv 1.1</code>):
+    Each key MUST:
+    <ol>
+    <li>start with an ASCII letter or an underscore.</li>
+    <li>contain only ASCII letters, numbers, and underscores.</li>
+    </ol>
+</li>
+<li>Unicode variant (<code>!kv 1.1u</code>):
+    Each key MUST:
+    <ol>
+    <li>start with a Unicode letter or an underscore.</li>
+    <li>contain only Unicode letters, Unicode decimal numbers, and underscores.</li>
+    </ol>
+</li>
+</ul>
+<p>
+Otherwise,
+parsers MUST raise an
+<code>INVALID_KEY_ERROR</code>.
+</p>
+</section>
+
+<section id="invalid_directive_error">
+<h3>B.9 <code>INVALID_DIRECTIVE_ERROR</code></h3>
+<p>
+A line beginning with <code>!</code>
+(after stripping leading whitespace)
+that does not match
+any of the following productions —
+version declaration (<code>!kv</code>),
+schema declaration (<code>!kvschema</code>),
+type annotation (<code>!</code> + recognized type keyword),
+encoding directive (<code>!b64</code>),
+custom annotation (<code>!x/</code>),
+or comment (<code>!//</code>)
+—
+MUST raise an <code>INVALID_DIRECTIVE_ERROR</code>.
+</p>
+</section>
+
+<section id="missing_final_eol_error">
+<h3>B.10 <code>MISSING_FINAL_EOL_ERROR</code></h3>
+<p>
+If the final line of a Kv text
+is missing an EOL terminator,
+parsers MUST consider the line invalid,
+and MUST raise a
+<code>MISSING_FINAL_EOL_ERROR</code>.
+This error MAY be reported
+without a line number.
+</p>
+</section>
+
+</section>
+
+<hr>
+
+<footer class="footnotes">
+<h2>Footnotes</h2>
+<ol>
+<li id="fn1">
+    A technically precise term
+    for what we call a "parser"
+    in this document
+    would be a <em>lexer</em>
+    or a <em>scanner</em>
+    (see e.g., <a href="#ref-aho06">[Aho06]</a>).
+    We use "parser"
+    because it is the established term
+    in data format specifications
+    and avoids implying
+    a subsequent parsing stage.
+    <a href="#fnref1" title="Return to text">&#x21A9;</a>
+</li>
+<li id="fn2">
+    Note the different casing:
+    <em>Kv</em> Format (title case)
+    vs <em>KV</em> entry (all caps).
+    <a href="#fnref2" title="Return to text">&#x21A9;</a>
+</li>
+<li id="fn3">
+    The strict requirement
+    on the final line including an EOL
+    enables deterministic streaming parsing,
+    where EOL serves as the definitive marker
+    that a complete line has been received.
+    Without a final EOL,
+    streaming implementations cannot reliably
+    distinguish incomplete transmissions
+    from valid end-of-input.
+    <a href="#fnref3" title="Return to text">&#x21A9;</a>
+</li>
+<li id="fn4">
+    Dots represent space characters.
+    <a href="#fnref4" title="Return to text">&#x21A9;</a>
+</li>
+</ol>
+</footer>
+
+<hr>
+
+<section id="sec-license">
+
+<h2>License</h2>
+
+<p>
+This specification is licensed under the
+<a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>
+(CC BY 4.0).
+A human-readable summary
+of the license terms
+is provided below,
+but the
+<a href="https://creativecommons.org/licenses/by/4.0/legalcode">full legal code</a>
+is the authoritative version.
+</p>
+
+<section id="sec-license-summary">
+<h3>1 Summary</h3>
+
+<p>
+<strong>You are free to:</strong>
+</p>
+<ul>
+<li>
+    <strong>Share</strong> —
+    copy and redistribute the material
+    in any medium or format
+</li>
+<li>
+    <strong>Adapt</strong> —
+    remix, transform, and build upon
+    the material for any purpose,
+    even commercially
+</li>
+</ul>
+
+<p>
+<strong>Under the following terms:</strong>
+</p>
+<ul>
+<li>
+    <strong>Attribution</strong> —
+    You must give appropriate credit to
+    <a href="https://kvformat.org/">kvformat.org</a>,
+    provide a link to the license,
+    and indicate if changes were made.
+    You may do so in any reasonable manner,
+    but not in any way that suggests
+    the licensor endorses you or your use.
+</li>
+<li>
+    <strong>No additional restrictions</strong> —
+    You may not apply legal terms
+    or technological measures
+    that legally restrict others
+    from doing anything the license permits.
+</li>
+</ul>
+
+<p>
+<strong>Notices:</strong>
+</p>
+<ul>
+<li>
+    You do not have to comply with the license
+    for elements of the material
+    in the public domain
+    or where your use is permitted
+    by an applicable exception or limitation.
+</li>
+<li>
+    No warranties are given.
+    The license may not give you
+    all of the permissions necessary
+    for your intended use.
+    For example,
+    other rights such as
+    publicity, privacy, or moral rights
+    may limit how you use the material.
+</li>
+</ul>
+</section>
+
+<section id="sec-license-attribution">
+<h3>2 Attribution Practice</h3>
+
+<p>When attributing this specification, please include:</p>
+
+<ul>
+<li>
+    The title: "Kv Format 1.1 Specification"
+</li>
+<li>
+    The version: "1.1 RC1"
+    (or the specific version you are referencing)
+</li>
+<li>
+    A link to the canonical URL:
+    <code>https://kvformat.org/spec/1.1-rc1.html</code>
+</li>
+<li>
+    A copyright notice: "© 2026 Bojan Đuričković"
+</li>
+</ul>
+
+<p>
+Example attribution:
+</p>
+<pre class="attribution-example">
+Kv Format 1.1 Specification RC1. © 2026 Bojan Đuričković.
+https://kvformat.org/spec/1.1-rc1.html (CC BY 4.0)
+</pre>
+</section>
+
+<section id="sec-license-disclaimer">
+<h3>3 Disclaimer</h3>
+
+<p>
+This specification is provided "AS IS"
+without warranty of any kind.
+The authors and copyright holders
+make no representations or warranties,
+express or implied,
+regarding the accuracy,
+completeness, or suitability
+of this specification
+for any particular purpose.
+</p>
+
+<p>
+In no event shall the authors
+or copyright holders
+be liable for any claim, damages,
+or other liability,
+whether in an action of contract,
+tort, or otherwise,
+arising from, out of,
+or in connection with this specification
+or the use or other dealings
+in this specification.
+</p>
+</section>
+
+<section id="sec-license-scope">
+<h3>4 Scope</h3>
+
+<p>
+This license applies
+to the specification document only.
+Any related implementations,
+example code, and other associated materials
+are licensed separately
+as indicated in their respective repositories.
+</p>
+
+</section>
+
+</section>
+
+</body>
+</html>
