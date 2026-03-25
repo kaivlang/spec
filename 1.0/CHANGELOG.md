@@ -1,5 +1,22 @@
-Kv Format 1.0 Specification CHANGELOG
-=====================================
+kaiv 1.0 CHANGELOG
+==================
+
+[1.0 RC5] - 2026-03-24
+----------------------
+
+### Changed
+
+- Project renamed from "Kv Format" to "kaiv"
+  - All references to "Kv Format" and "Kv" changed to "kaiv" throughout the spec
+
+- Section 2.7 extended from "Parser" to "Parser and Application"
+
+- Formal grammar edited for clarity
+
+- Copyright attribution changed to "the kaiv authors"
+
+
+### Changed
 
 [1.0 RC4] - 2026-03-21
 ----------------------
