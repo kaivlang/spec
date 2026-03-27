@@ -1,6 +1,18 @@
 Kv Format 1.1 Specification CHANGELOG
 =====================================
 
+[1.1 RC5] - 2026-03-27
+----------------------
+
+### Added
+
+- Section on schema constraints
+
+
+### Changed
+
+- Major restructuring of 1.1 sections, splitting sections into new parts
+
 
 [1.1 RC2] - 2026-03-22
 ----------------------
